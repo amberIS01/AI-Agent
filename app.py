@@ -116,7 +116,7 @@ with st.sidebar:
     # Create styled buttons for each quick question
     for i, q in enumerate(quick_questions):
         if st.button(
-            f"<span class='btn-icon'>{q['icon']}</span> {q['text']}",
+            f"{q['icon']} {q['text']}",
             key=f"qq_{i}",
             help=f"Search: {q['query']}",
             use_container_width=True,
@@ -398,7 +398,7 @@ def display_results(results: pd.DataFrame, query: str):
         
         # Create the card
         with st.container():
-            st.markdown(f"""
+            st.markdown("""
             <div class='procedure-card'>
                 <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;'>
                     <div>

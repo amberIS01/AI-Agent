@@ -13,7 +13,7 @@ st.set_page_config(
 
 # Simple CSS
 st.markdown("""
-    <style>
+    <style>)
     .procedure-card {
         background: white;
         border-radius: 10px;
@@ -127,20 +127,40 @@ def search_data(df, query):
 def main():
     st.title("🏥 Hospital Reimbursement Portal")
     
-    # Load data
+    # Initialize session state
     if 'data' not in st.session_state:
-        with st.spinner('Loading data...'):
-            st.session_state.data = load_data()
+        st.session_state.data = pd.DataFrame()
     
-    # Sidebar with quick searches
+    # Load data if not already loaded
+    if st.session_state.data.empty:
+        with st.spinner('Loading data...'):
+            try:
+                st.session_state.data = load_data()
+                # Ensure required columns exist
+                required_cols = ['Procedure', 'Code', 'Amount']
+                for col in required_cols:
+                    if col not in st.session_state.data.columns:
+                        st.session_state.data[col] = ''
+            except Exception as e:
+                st.error(f"Error loading data: {str(e)}")
+                st.session_state.data = pd.DataFrame()
+                
+    # Initialize search query in session state
+    if 'search_query' not in st.session_state:
+        st.session_state.search_query = ''
+    
+# Sidebar with quick searches
     with st.sidebar:
         st.header("Quick Searches")
         if st.button("Show all procedures"):
             st.session_state.search_query = ""
+            st.rerun()
         if st.button("Show expensive procedures (>5000)"):
             st.session_state.search_query = ">5000"
+            st.rerun()
         if st.button("Show common procedures"):
             st.session_state.search_query = "common"
+            st.rerun()
     
     # Search box
     search_query = st.text_input(
@@ -161,7 +181,7 @@ def main():
                 # Create a card for each result
                 with st.container():
                     st.markdown(
-                        f"""
+                        """
                         <div style='
                             padding: 15px;
                             margin: 10px 0;
@@ -169,15 +189,15 @@ def main():
                             background-color: #f8f9fa;
                             border-left: 5px solid #1e88e5;
                         '>
-                            <h3>{}</h3>
-                            <p><strong>Code:</strong> {} | <strong>Section:</strong> {}</p>
-                            <p style='font-size: 1.2em; color: #2e7d32;'><strong>CHF {}</strong></p>
+                            <h3>{procedure}</h3>
+                            <p><strong>Code:</strong> {code} | <strong>Section:</strong> {section}</p>
+                            <p style='font-size: 1.2em; color: #2e7d32;'><strong>CHF {amount}</strong></p>
                         </div>
                         """.format(
-                            row.get('Procedure', 'N/A'),
-                            row.get('Code', 'N/A'),
-                            row.get('SectionReference', 'N/A'),
-                            f"{float(row.get('Amount', 0)):,.2f}" if pd.notna(row.get('Amount')) else 'N/A'
+                            procedure=row.get('Procedure', 'N/A'),
+                            code=row.get('Code', 'N/A'),
+                            section=row.get('SectionReference', 'N/A'),
+                            amount=f"{float(row.get('Amount', 0)):,.2f}" if pd.notna(row.get('Amount')) and str(row.get('Amount', '')).strip() not in ['', 'nan'] else 'N/A'
                         ),
                         unsafe_allow_html=True
                     )
